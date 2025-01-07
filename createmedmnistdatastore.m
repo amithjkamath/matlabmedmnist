@@ -1,4 +1,4 @@
-function imds = createmedmnistdatastore(images, labels)
+function imds = createmedmnistdatastore(images, labels, nameValueArgs)
     % CREATEMEDMNISTDATASTORE creates imageDatastore for medmnist.
     %
     %    Inputs:
@@ -8,23 +8,37 @@ function imds = createmedmnistdatastore(images, labels)
     %    Outputs:
     %        imds: image datastore ready to use for training/evaluation.
     
+    arguments
+       images {mustBeNumeric} % How do I test if the number of dimensions is 4?
+       labels {mustBeNumeric, mustBeColumn}
+       nameValueArgs.savepath string {mustBeFolder} = "."
+    end
+
+    if ~exist(nameValueArgs.savepath, 'dir')
+       mkdir(nameValueArgs.savepath + filesep + "dataset");
+    end
+
     n_images = size(images, 1);
     assert(length(labels) == n_images, ...
         "Number of images must match number of labels")
 
-    save_dir = uigetdir(".", "Choose folder to save image data in:");
-
     unique_labels = unique(labels);
     for label_idx = 1:numel(unique_labels)
-        mkdir(fullfile(save_dir, string(unique_labels(label_idx))));
+        mkdir(fullfile(nameValueArgs.savepath + filesep + "dataset", ...
+              string(unique_labels(label_idx))));
     end
 
     for i = 1:n_images
         image_data = squeeze(images(i, :, :, :));
         label_data = labels(i);
         i_padded = sprintf('%04d', i);
-        imwrite(image_data, fullfile(save_dir, string(label_data), ...
+        imwrite(image_data, fullfile(nameValueArgs.savepath + ...
+                filesep + "dataset", ...
+                string(label_data), ...
                 string(i_padded) + ".png"));
     end
-    imds = imageDatastore(save_dir, "IncludeSubfolders", true, "LabelSource","foldernames");
+    imds = imageDatastore(nameValueArgs.savepath + ...
+                          filesep + "dataset", ...
+                          "IncludeSubfolders", true, ...
+                          "LabelSource","foldernames");
 end

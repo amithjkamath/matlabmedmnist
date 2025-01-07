@@ -1,4 +1,4 @@
-function [] = readmedmnist(variant, nameValueArgs)
+function medmnistdata = readmedmnist(variant, nameValueArgs)
     % READMEDMNIST reads medmnist data files from the zenodo server.
     %
     % Inputs:
@@ -16,6 +16,13 @@ function [] = readmedmnist(variant, nameValueArgs)
     %        This parameter includes the image size, 64, 128 are reasonable
     %        options depending on what image sizes are available from
     %        https://medmnist.com 
+    %
+    % Outputs:
+    %    medmnistdata: struct
+    %        This structure contains fields titled <split>_images for 
+    %        image data, and <split>_labels for label data from the
+    %        requested data set. Note that the number of elements in the
+    %        structure can be different depending on the data downloaded.
 
     % Dependency: many thanks to https://github.com/kwikteam/npy-matlab
     % for their .npy MATLAB reading utilities.
@@ -51,12 +58,14 @@ function [] = readmedmnist(variant, nameValueArgs)
     unzip(fullfile(path_to_save, variant + ".npz"), path_to_save);
     files = dir(fullfile(path_to_save,'*.npy'));
     datafiles = string(fullfile({files.folder},{files.name}));
+
+    medmnistdata = struct();
     for npy_file = datafiles
         [~, fname, ~] = fileparts(npy_file);
         if contains(npy_file, nameValueArgs.split)
             fprintf("Extracting: " + fname + " structure. \n")
             data = readNPY(npy_file);
-            assignin('base', fname, data);
+            medmnistdata.(fname) = data;
         end
         delete(npy_file);
     end
